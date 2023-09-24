@@ -1,4 +1,5 @@
 defmodule Mastery do
+  alias Mastery.Boundary.Proctor
   alias Mastery.Boundary.QuizManager
   alias Mastery.Boundary.QuizSession
   alias Mastery.Boundary.QuizValidator
@@ -32,5 +33,13 @@ defmodule Mastery do
 
   def answer_question(session, answer) do
     GenServer.call(QuizSession.via(session), {:answer_question, answer})
+  end
+
+  def schedule_quiz(quiz, templates, start_at, end_at) do
+    with :ok <- QuizValidator.errors(quiz),
+         true <- Enum.all?(templates, &(:ok == TemplateValidator.errors(&1))),
+         :ok <- Proctor.schedule_quiz(quiz, templates, start_at, end_at),
+         do: :ok,
+         else: (error -> error)
   end
 end
