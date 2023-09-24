@@ -6,6 +6,8 @@ defmodule Mastery do
   alias Mastery.Boundary.TemplateValidator
   alias Mastery.Core.Quiz
 
+  @persistence_fn Application.compile_env(:mastery, :persistence_fn)
+
   def build_quiz(fields) do
     with :ok <- QuizValidator.errors(fields),
          :ok <- GenServer.call(QuizManager, {:build_quiz, fields}),
@@ -27,12 +29,12 @@ defmodule Mastery do
          else: (error -> error)
   end
 
-  def select_question(session) do
-    GenServer.call(QuizSession.via(session), :select_question)
+  def select_question(name) do
+    QuizSession.select_question(name)
   end
 
-  def answer_question(session, answer) do
-    GenServer.call(QuizSession.via(session), {:answer_question, answer})
+  def answer_question(name, answer, persistence_fn \\ @persistence_fn) do
+    QuizSession.answer_question(name, answer, persistence_fn)
   end
 
   def schedule_quiz(quiz, templates, start_at, end_at) do
